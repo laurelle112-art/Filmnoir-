@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test API Agnes</title>
+<style>
+body{background:#0a0a0c;color:#e8e8ec;font-family:Georgia,serif;padding:16px;max-width:800px;margin:auto}
+h1{color:#c9a227;text-align:center;font-size:1.3rem}
+.panel{background:#141418;border:1px solid #2a2a32;border-radius:10px;padding:16px;margin-bottom:16px}
+label{display:block;font-size:.8rem;color:#8a8a96;margin-bottom:4px;font-family:monospace}
+input{width:100%;background:#1c1c22;border:1px solid #2a2a32;color:#e8e8ec;padding:10px;border-radius:6px;margin-bottom:10px;box-sizing:border-box}
+button{background:#c9a227;color:#000;border:none;padding:14px;border-radius:8px;font-size:1rem;font-weight:bold;width:100%}
+#log{background:#08080a;border:1px solid #2a2a32;border-radius:6px;padding:10px;font-family:monospace;font-size:.75rem;max-height:200px;overflow-y:auto;white-space:pre-wrap;color:#8a8a96}
+.ok{color:#3fb950}.err{color:#f85149}.info{color:#58a6ff}
+</style>
+</head>
+<body>
+<h1>TEST API AGNES</h1>
+<div class="panel">
+  <label>Clé API</label>
+  <input id="apiKey" placeholder="sk-...">
+  <label>Sujet</label>
+  <input id="sujet" placeholder="Ex : un meurtre dans le jazz">
+  <button id="btn">Tester</button>
+</div>
+<div class="panel"><div id="log">En attente…</div></div>
+<script>
+const logEl=document.getElementById('log');
+function log(m,t='info'){logEl.innerHTML+='<span class="'+t+'">'+m+'</span>\n';logEl.scrollTop=logEl.scrollHeight}
+document.getElementById('btn').onclick=async()=>{
+  const b=document.getElementById('btn');b.disabled=true;logEl.innerHTML='';
+  const key=document.getElementById('apiKey').value.trim();
+  const sujet=document.getElementById('sujet').value.trim();
+  if(!key||!sujet){log('Clé ou sujet manquant','err');b.disabled=false;return}
+  try{
+    log('Appel API…','info');
+    const r=await fetch('https://apihub.agnes-ai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'agnes-2.5-flash',messages:[{role:'user',content:'Écris un synopsis de film noir sur : '+sujet}]})
+    });
+    if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+' : '+t)}
+    const d=await r.json();
+    log('✅ SUCCÈS !','ok');
+    log(d.choices[0].message.content,'ok');
+  }catch(e){log('❌ ERREUR : '+e.message,'err')}
+  b.disabled=false;
+};
+</script>
+</body>
+</html>
